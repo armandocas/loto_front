@@ -174,10 +174,6 @@ export default function LotteryPage({ params }: Props) {
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground">Preço</p>
-              <p className="font-semibold">R$ {config.price.toFixed(2)}</p>
-            </div>
-            <div>
               <p className="text-muted-foreground">Sorteios</p>
               <p className="font-semibold capitalize">
                 {config.drawDays.join(", ")}

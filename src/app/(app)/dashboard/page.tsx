@@ -131,7 +131,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-[10px]">
-                        R$ {lottery.price.toFixed(2)}
+                        {lottery.drawDays.join(", ")}
                       </Badge>
                     </div>
                   </CardContent>

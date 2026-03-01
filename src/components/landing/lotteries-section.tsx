@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { LOTTERIES } from "@/constants/lotteries";
 
 const containerVariants = {
@@ -64,9 +63,6 @@ export function LotteriesSection() {
                     {lottery.name.slice(0, 2).toUpperCase()}
                   </div>
                   <h3 className="font-semibold text-sm">{lottery.name}</h3>
-                  <Badge variant="secondary" className="text-xs">
-                    R$ {lottery.price.toFixed(2)}
-                  </Badge>
                 </CardContent>
               </Card>
             </motion.div>
