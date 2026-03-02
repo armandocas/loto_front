@@ -9,7 +9,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-emerald-500 to-green-700",
     description: "Escolha 6 números de 1 a 60",
     prizeDescription: "Acerte 6 números e ganhe milhões",
-    drawDays: ["terça", "quinta", "sábado"],
+    drawDays: ["ter", "qui", "sáb"],
     price: 5.0,
   },
   lotofacil: {
@@ -20,7 +20,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-purple-600 to-fuchsia-800",
     description: "Escolha 15 números de 1 a 25",
     prizeDescription: "A loteria mais fácil de ganhar",
-    drawDays: ["segunda", "terça", "quarta", "quinta", "sexta", "sábado"],
+    drawDays: ["seg a sáb"],
     price: 3.0,
   },
   quina: {
@@ -31,7 +31,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-indigo-600 to-violet-900",
     description: "Escolha 5 números de 1 a 80",
     prizeDescription: "Sorteios de segunda a sábado",
-    drawDays: ["segunda", "terça", "quarta", "quinta", "sexta", "sábado"],
+    drawDays: ["seg a sáb"],
     price: 2.5,
   },
   lotomania: {
@@ -42,7 +42,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-orange-500 to-amber-700",
     description: "Escolha 50 números de 0 a 99",
     prizeDescription: "Acerte 20, 19, 18... ou nenhum!",
-    drawDays: ["segunda", "quarta", "sexta"],
+    drawDays: ["seg", "qua", "sex"],
     price: 3.0,
   },
   timemania: {
@@ -54,7 +54,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-lime-400 to-green-600",
     description: "Escolha 10 números de 1 a 80 + Time do Coração",
     prizeDescription: "Torça pelo seu time e ganhe",
-    drawDays: ["terça", "quinta", "sábado"],
+    drawDays: ["ter", "qui", "sáb"],
     price: 3.5,
   },
   duplasena: {
@@ -65,7 +65,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-red-600 to-rose-800",
     description: "Escolha 6 números de 1 a 50 (2 sorteios)",
     prizeDescription: "Duas chances de ganhar por concurso",
-    drawDays: ["terça", "quinta", "sábado"],
+    drawDays: ["ter", "qui", "sáb"],
     price: 2.5,
   },
   federal: {
@@ -76,7 +76,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-blue-600 to-sky-900",
     description: "Bilhetes com 5 algarismos",
     prizeDescription: "A loteria mais tradicional do Brasil",
-    drawDays: ["quarta", "sábado"],
+    drawDays: ["qua", "sáb"],
     price: 5.0,
   },
   diadesorte: {
@@ -88,7 +88,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-yellow-500 to-orange-700",
     description: "Escolha 7 números de 1 a 31 + Mês da Sorte",
     prizeDescription: "Escolha seu mês da sorte",
-    drawDays: ["terça", "quinta", "sábado"],
+    drawDays: ["ter", "qui", "sáb"],
     price: 2.5,
   },
   supersete: {
@@ -99,7 +99,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-lime-500 to-emerald-600",
     description: "Escolha 1 número por coluna (7 colunas, 0 a 9)",
     prizeDescription: "O jogo dos 7 acertos",
-    drawDays: ["segunda", "quarta", "sexta"],
+    drawDays: ["seg", "qua", "sex"],
     price: 2.5,
   },
   maismilionaria: {
@@ -111,7 +111,7 @@ export const LOTTERIES: Record<LotterySlug, LotteryConfig> = {
     gradient: "from-indigo-700 to-blue-900",
     description: "Escolha 6 de 50 + 2 trevos de 1 a 6",
     prizeDescription: "A loteria dos grandes prêmios",
-    drawDays: ["quarta", "sábado"],
+    drawDays: ["qua", "sáb"],
     price: 6.0,
   },
 };
@@ -124,35 +124,137 @@ export const GENERATION_METHODS = [
     name: "Aleatório",
     description: "Geração totalmente randômica",
     icon: "Shuffle",
+    category: "classic" as const,
   },
   {
     id: "frequency" as const,
     name: "Frequência",
     description: "Baseado nos números mais sorteados",
     icon: "BarChart3",
+    category: "classic" as const,
   },
   {
     id: "hot-cold" as const,
     name: "Quentes/Frios",
     description: "Análise dos últimos concursos",
     icon: "Flame",
+    category: "classic" as const,
   },
   {
     id: "statistical" as const,
     name: "Estatístico",
     description: "Análise de probabilidade avançada",
     icon: "TrendingUp",
+    category: "classic" as const,
   },
   {
     id: "smart-filter" as const,
     name: "Filtro Inteligente",
     description: "Defina seus próprios critérios",
     icon: "SlidersHorizontal",
+    category: "classic" as const,
   },
   {
     id: "ai" as const,
     name: "Inteligência Artificial",
     description: "Sugestões baseadas em IA",
     icon: "Brain",
+    category: "classic" as const,
+  },
+  {
+    id: "zodiac" as const,
+    name: "Signos",
+    description: "Números da sorte baseados no seu signo do zodíaco",
+    icon: "Star",
+    category: "personal" as const,
+  },
+  {
+    id: "numerology" as const,
+    name: "Numerologia",
+    description: "Gere números a partir da energia do seu nome completo",
+    icon: "Hash",
+    category: "personal" as const,
+  },
+  {
+    id: "birthday" as const,
+    name: "Datas Especiais",
+    description: "Use aniversários e datas marcantes para gerar jogos",
+    icon: "CalendarHeart",
+    category: "personal" as const,
+  },
+  {
+    id: "personal-profile" as const,
+    name: "Perfil Pessoal",
+    description: "Combina signo, nome, datas e frase da sorte num jogo único",
+    icon: "FingerprintPattern",
+    category: "personal" as const,
+  },
+  {
+    id: "biorhythm" as const,
+    name: "Biorritmo",
+    description: "Seus 3 ciclos biológicos (físico, emocional, intelectual) geram números únicos a cada dia",
+    icon: "Activity",
+    category: "innovative" as const,
+  },
+  {
+    id: "dream" as const,
+    name: "Sonhos",
+    description: "Descreva seu sonho e transforme símbolos em números da sorte",
+    icon: "CloudMoon",
+    category: "innovative" as const,
+  },
+  {
+    id: "lunar" as const,
+    name: "Fase Lunar",
+    description: "A fase atual da lua influencia os números gerados em tempo real",
+    icon: "Moon",
+    category: "innovative" as const,
+  },
+  {
+    id: "color-synesthesia" as const,
+    name: "Sinestesia",
+    description: "Escolha cores que sente hoje e converta em números pela sinestesia cromática",
+    icon: "Palette",
+    category: "innovative" as const,
+  },
+  {
+    id: "moment-entropy" as const,
+    name: "Entropia",
+    description: "Seus movimentos do mouse geram energia única e irrepetível para criar números",
+    icon: "Zap",
+    category: "innovative" as const,
+  },
+  {
+    id: "geo-energy" as const,
+    name: "Geo Energético",
+    description: "Sua localização geográfica gera um campo numérico único no planeta",
+    icon: "MapPin",
+    category: "innovative" as const,
+  },
+  {
+    id: "temporal" as const,
+    name: "Temporal",
+    description: "Analisa o exato instante da geração: hora, feriado, número mestre, hora espelho",
+    icon: "Clock",
+    category: "innovative" as const,
+  },
+  {
+    id: "quantum-resonance" as const,
+    name: "Quântico",
+    description: "Simula um campo de probabilidade quântica usando o atrator de Lorenz caótico",
+    icon: "Atom",
+    category: "innovative" as const,
   },
 ] as const;
+
+export const CLASSIC_METHODS = GENERATION_METHODS.filter(
+  (m) => m.category === "classic"
+);
+
+export const PERSONAL_METHODS = GENERATION_METHODS.filter(
+  (m) => m.category === "personal"
+);
+
+export const INNOVATIVE_METHODS = GENERATION_METHODS.filter(
+  (m) => m.category === "innovative"
+);

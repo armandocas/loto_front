@@ -8,26 +8,28 @@ import {
   Bookmark,
   Trophy,
   ArrowRight,
+  CalendarDays,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LOTTERIES } from "@/constants/lotteries";
+import { LOTTERIES, GENERATION_METHODS } from "@/constants/lotteries";
 import { ROUTES } from "@/constants/routes";
 import { useGameStore } from "@/stores/game.store";
 import { useAuthContext } from "@/lib/firebase/providers";
+import { getUpcomingDraws } from "@/lib/utils/draw-schedule";
 
 const stats = [
   {
     label: "Jogos Gerados",
     icon: Dices,
-    getValue: (count: number) => count.toString(),
+    getValue: (counts: { gen: number; saved: number }) => counts.gen.toString(),
     gradient: "from-blue-500 to-indigo-600",
   },
   {
     label: "Jogos Salvos",
     icon: Bookmark,
-    getValue: (count: number) => count.toString(),
+    getValue: (counts: { gen: number; saved: number }) => counts.saved.toString(),
     gradient: "from-purple-500 to-fuchsia-600",
   },
   {
@@ -37,9 +39,9 @@ const stats = [
     gradient: "from-cyan-500 to-teal-600",
   },
   {
-    label: "Métodos de Geração",
+    label: "Métodos",
     icon: TrendingUp,
-    getValue: () => "6",
+    getValue: () => GENERATION_METHODS.length.toString(),
     gradient: "from-orange-500 to-amber-600",
   },
 ];
@@ -58,6 +60,7 @@ export default function DashboardPage() {
   const { user } = useAuthContext();
   const { generatedGames, savedGames } = useGameStore();
   const lotteries = Object.values(LOTTERIES);
+  const upcomingDraws = getUpcomingDraws(3).slice(0, 8);
 
   return (
     <div className="space-y-8">
@@ -76,7 +79,7 @@ export default function DashboardPage() {
         animate="visible"
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
-        {stats.map((stat, i) => (
+        {stats.map((stat) => (
           <motion.div key={stat.label} variants={itemVariants}>
             <Card className="glass border-white/10">
               <CardContent className="p-4 flex items-center gap-4">
@@ -87,9 +90,10 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    {stat.getValue(
-                      i === 0 ? generatedGames.length : savedGames.length
-                    )}
+                    {stat.getValue({
+                      gen: generatedGames.length,
+                      saved: savedGames.length,
+                    })}
                   </p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
@@ -98,6 +102,64 @@ export default function DashboardPage() {
           </motion.div>
         ))}
       </motion.div>
+
+      {upcomingDraws.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <CalendarDays className="h-5 w-5" />
+              Próximos Sorteios
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={ROUTES.calendar}>Ver calendário</Link>
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {upcomingDraws.map((draw, i) => {
+              const isToday = draw.date.toDateString() === new Date().toDateString();
+              return (
+                <Link key={`${draw.lottery}-${i}`} href={ROUTES.lottery(draw.lottery)}>
+                  <Card
+                    className={`glass border-white/10 hover:border-white/20 transition-all cursor-pointer ${
+                      isToday ? "ring-1 ring-yellow-500/50" : ""
+                    }`}
+                  >
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
+                        style={{ backgroundColor: draw.color }}
+                      >
+                        {draw.lotteryName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium truncate">{draw.lotteryName}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {isToday
+                            ? "Hoje"
+                            : draw.date.toLocaleDateString("pt-BR", {
+                                weekday: "short",
+                                day: "2-digit",
+                                month: "short",
+                              })}
+                        </p>
+                      </div>
+                      {isToday && (
+                        <Badge className="ml-auto text-[9px] bg-yellow-500/20 text-yellow-400">
+                          HOJE
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -114,7 +176,7 @@ export default function DashboardPage() {
               <Link href={ROUTES.lottery(lottery.slug)}>
                 <Card className="group glass border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer h-full">
                   <CardContent className="p-5 space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap gap-2">
                       <div
                         className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold"
                         style={{ backgroundColor: lottery.color }}
@@ -173,7 +235,7 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap gap-2">
                       {game.numbers.map((num, i) => (
                         <span
-                          key={i}
+                          key={`${num}-${i}`}
                           className="w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center"
                           style={{
                             backgroundColor: `${lotteryConfig.color}20`,

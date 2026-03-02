@@ -6,7 +6,34 @@ export type GenerationMethod =
   | "hot-cold"
   | "statistical"
   | "smart-filter"
-  | "ai";
+  | "ai"
+  | "zodiac"
+  | "numerology"
+  | "birthday"
+  | "personal-profile"
+  | "biorhythm"
+  | "dream"
+  | "lunar"
+  | "color-synesthesia"
+  | "moment-entropy"
+  | "geo-energy"
+  | "temporal"
+  | "quantum-resonance";
+
+export interface GenerationAudit {
+  seed?: string;
+  timestamp: string;
+  entropy?: string;
+  method: GenerationMethod;
+}
+
+export interface CheckedResult {
+  gameId: string;
+  contestNumber: number;
+  hits: number[];
+  hitCount: number;
+  prize?: string;
+}
 
 export interface GeneratedGame {
   id: string;
@@ -16,6 +43,8 @@ export interface GeneratedGame {
   method: GenerationMethod;
   createdAt: string;
   saved: boolean;
+  audit?: GenerationAudit;
+  checkedResults?: CheckedResult[];
 }
 
 export interface SmartFilterOptions {
@@ -27,11 +56,40 @@ export interface SmartFilterOptions {
   decadeDistribution?: Record<string, number>;
 }
 
+export type ZodiacSign =
+  | "aries"
+  | "touro"
+  | "gemeos"
+  | "cancer"
+  | "leao"
+  | "virgem"
+  | "libra"
+  | "escorpiao"
+  | "sagitario"
+  | "capricornio"
+  | "aquario"
+  | "peixes";
+
+export interface PersonalData {
+  fullName?: string;
+  birthDate?: string;
+  zodiacSign?: ZodiacSign;
+  specialDates?: string[];
+  luckyPhrase?: string;
+  dreamText?: string;
+  selectedColors?: string[];
+  quantumSeed?: string;
+  chaosIntensity?: number;
+  geoCoords?: { lat: number; lng: number };
+  entropyData?: number[];
+}
+
 export interface GenerationRequest {
   lottery: LotterySlug;
   method: GenerationMethod;
   quantity: number;
   filters?: SmartFilterOptions;
+  personalData?: PersonalData;
 }
 
 export interface SavedGame extends GeneratedGame {

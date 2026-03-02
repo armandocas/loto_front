@@ -4,7 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
-import { Dices, BarChart3, History, ArrowRight } from "lucide-react";
+import { Dices, BarChart3, History, ArrowRight, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,13 @@ export default function LotteryPage({ params }: Props) {
       description: "Análise de frequência e padrões dos números",
       gradient: "from-cyan-500 to-teal-600",
     },
+    {
+      href: ROUTES.lotteryCheck(slug),
+      icon: Search,
+      title: "Conferir Jogos",
+      description: "Confira seus jogos salvos contra os resultados",
+      gradient: "from-green-500 to-emerald-600",
+    },
   ];
 
   return (
@@ -68,7 +75,7 @@ export default function LotteryPage({ params }: Props) {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {actions.map((action, i) => (
           <motion.div
             key={action.title}

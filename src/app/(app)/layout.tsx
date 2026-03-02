@@ -4,11 +4,13 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { QuickPlayFab } from "@/components/layout/quick-play-fab";
 import { useAuthContext } from "@/lib/firebase/providers";
 import { ROUTES } from "@/constants/routes";
 import type { ReactNode } from "react";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function AppLayout({ children }: Readonly<{ children: ReactNode }>) {
   const { user, loading } = useAuthContext();
   const router = useRouter();
 
@@ -36,8 +38,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <AppTopbar />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <Breadcrumbs />
+          {children}
+        </main>
       </div>
+      <QuickPlayFab />
     </div>
   );
 }

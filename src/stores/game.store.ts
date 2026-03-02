@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { GeneratedGame } from "@/types/game";
+import type { GeneratedGame, CheckedResult } from "@/types/game";
 
 interface GameStore {
   generatedGames: GeneratedGame[];
@@ -9,11 +9,13 @@ interface GameStore {
   clearGeneratedGames: () => void;
   saveGame: (game: GeneratedGame) => void;
   removeSavedGame: (id: string) => void;
+  addCheckedResult: (gameId: string, result: CheckedResult) => void;
+  getCheckedResults: (gameId: string) => CheckedResult[];
 }
 
 export const useGameStore = create<GameStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       generatedGames: [],
       savedGames: [],
       addGeneratedGames: (games) =>
@@ -32,6 +34,26 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({
           savedGames: state.savedGames.filter((g) => g.id !== id),
         })),
+      addCheckedResult: (gameId, result) =>
+        set((state) => ({
+          savedGames: state.savedGames.map((g) =>
+            g.id === gameId
+              ? {
+                  ...g,
+                  checkedResults: [
+                    ...(g.checkedResults || []).filter(
+                      (r) => r.contestNumber !== result.contestNumber
+                    ),
+                    result,
+                  ],
+                }
+              : g
+          ),
+        })),
+      getCheckedResults: (gameId) => {
+        const game = get().savedGames.find((g) => g.id === gameId);
+        return game?.checkedResults || [];
+      },
     }),
     { name: "loto-games" }
   )

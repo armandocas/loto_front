@@ -8,6 +8,10 @@ import {
   Bookmark,
   User,
   LogOut,
+  CalendarDays,
+  Target,
+  ShieldCheck,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,16 +21,22 @@ import { LOTTERIES } from "@/constants/lotteries";
 import { ROUTES } from "@/constants/routes";
 import { signOut } from "@/lib/firebase/auth";
 import { useAuthContext } from "@/lib/firebase/providers";
+import { PlanBadge } from "@/components/subscription/PlanBadge";
+import { useSubscriptionStore } from "@/stores/subscription.store";
 
 const mainNav = [
   { href: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard },
   { href: ROUTES.savedGames, label: "Jogos Salvos", icon: Bookmark },
+  { href: ROUTES.calendar, label: "Calendário", icon: CalendarDays },
+  { href: ROUTES.strategies, label: "Estratégias", icon: Target },
+  { href: ROUTES.responsible, label: "Jogo Responsável", icon: ShieldCheck },
   { href: ROUTES.profile, label: "Perfil", icon: User },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuthContext();
+  const { subscription } = useSubscriptionStore();
   const lotteries = Object.values(LOTTERIES);
 
   return (
@@ -84,15 +94,30 @@ export function AppSidebar() {
         </div>
       </ScrollArea>
 
+      {subscription.tier === "free" && (
+        <div className="px-3 pb-2">
+          <Link
+            href="/pricing"
+            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-all"
+          >
+            <Crown className="h-4 w-4 text-purple-400" />
+            <span className="text-purple-300 font-medium">Fazer upgrade</span>
+          </Link>
+        </div>
+      )}
+
       <div className="p-3 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-xs font-semibold">
             {user?.displayName?.[0]?.toUpperCase() || "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
-              {user?.displayName || "Usuário"}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium truncate">
+                {user?.displayName || "Usuário"}
+              </p>
+              <PlanBadge />
+            </div>
             <p className="text-xs text-muted-foreground truncate">
               {user?.email}
             </p>

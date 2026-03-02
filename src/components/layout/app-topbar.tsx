@@ -12,6 +12,10 @@ import {
   LogOut,
   Moon,
   Sun,
+  Bell,
+  CalendarDays,
+  Target,
+  ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -21,6 +25,11 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -28,10 +37,14 @@ import { LOTTERIES } from "@/constants/lotteries";
 import { ROUTES } from "@/constants/routes";
 import { signOut } from "@/lib/firebase/auth";
 import { useAuthContext } from "@/lib/firebase/providers";
+import { getUpcomingDraws } from "@/lib/utils/draw-schedule";
 
 const mainNav = [
   { href: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard },
   { href: ROUTES.savedGames, label: "Jogos Salvos", icon: Bookmark },
+  { href: ROUTES.calendar, label: "Calendário", icon: CalendarDays },
+  { href: ROUTES.strategies, label: "Estratégias", icon: Target },
+  { href: ROUTES.responsible, label: "Jogo Responsável", icon: ShieldCheck },
   { href: ROUTES.profile, label: "Perfil", icon: User },
 ];
 
@@ -41,6 +54,7 @@ export function AppTopbar() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const lotteries = Object.values(LOTTERIES);
+  const todayDraws = getUpcomingDraws(0);
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-sm px-4 lg:px-6">
@@ -108,6 +122,43 @@ export function AppTopbar() {
       </Sheet>
 
       <div className="flex-1" />
+
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="h-4 w-4" />
+            {todayDraws.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-[10px] text-white flex items-center justify-center">
+                {todayDraws.length}
+              </span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72 p-0" align="end">
+          <div className="p-3 border-b">
+            <p className="font-semibold text-sm">Notificações</p>
+          </div>
+          <div className="p-2 space-y-1 max-h-64 overflow-y-auto">
+            {todayDraws.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-2">Nenhum sorteio hoje.</p>
+            ) : (
+              todayDraws.map((draw) => (
+                <Link
+                  key={`${draw.lottery}-${draw.date.toISOString()}`}
+                  href={ROUTES.lottery(draw.lottery)}
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                >
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: draw.color }} />
+                  <div>
+                    <p className="text-xs font-medium">{draw.lotteryName}</p>
+                    <p className="text-[10px] text-muted-foreground">Sorteio hoje às 20h</p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <Button
         variant="ghost"
