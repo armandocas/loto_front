@@ -11,6 +11,7 @@ import {
   Inbox,
   Clock,
   Hash,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,10 +36,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LOTTERIES, GENERATION_METHODS, LOTTERY_SLUGS } from "@/constants/lotteries";
-import { ROUTES } from "@/constants/routes";
 import { useStrategyStore } from "@/stores/strategy.store";
 import { useGameStore } from "@/stores/game.store";
 import { generateGames } from "@/lib/generators";
+import { TemplateBuilder } from "@/components/games/TemplateBuilder";
+import { TeimosinhaConfig } from "@/components/games/TeimosinhaConfig";
 import type { LotterySlug } from "@/types/lottery";
 import type { GenerationMethod } from "@/types/game";
 
@@ -51,6 +53,9 @@ export default function StrategiesPage() {
   const [newLottery, setNewLottery] = useState<string>("");
   const [newMethod, setNewMethod] = useState<string>("");
   const [newQuantity, setNewQuantity] = useState(1);
+  const [fixedNumbers, setFixedNumbers] = useState<number[]>([]);
+  const [teimosinhaEnabled, setTeimosinhaEnabled] = useState(false);
+  const [teimosinhaRepeat, setTeimosinhaRepeat] = useState(3);
 
   const { canSaveMoreStrategies } = useFeatureGate();
 
@@ -69,6 +74,7 @@ export default function StrategiesPage() {
       lottery: newLottery as LotterySlug,
       method: newMethod as GenerationMethod,
       quantity: newQuantity,
+      fixedNumbers: fixedNumbers.length > 0 ? fixedNumbers : undefined,
       createdAt: new Date().toISOString(),
       usageCount: 0,
     });
@@ -77,6 +83,9 @@ export default function StrategiesPage() {
     setNewLottery("");
     setNewMethod("");
     setNewQuantity(1);
+    setFixedNumbers([]);
+    setTeimosinhaEnabled(false);
+    setTeimosinhaRepeat(3);
   }
 
   function handleRun(strategyId: string) {
@@ -125,7 +134,7 @@ export default function StrategiesPage() {
               Nova Estratégia
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Estratégia</DialogTitle>
             </DialogHeader>
@@ -140,7 +149,7 @@ export default function StrategiesPage() {
               </div>
               <div>
                 <Label>Loteria</Label>
-                <Select value={newLottery} onValueChange={setNewLottery}>
+                <Select value={newLottery} onValueChange={(val) => { setNewLottery(val); setFixedNumbers([]); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
@@ -178,6 +187,22 @@ export default function StrategiesPage() {
                   onChange={(e) => setNewQuantity(Number.parseInt(e.target.value) || 1)}
                 />
               </div>
+
+              {newLottery && (
+                <TemplateBuilder
+                  lottery={newLottery as LotterySlug}
+                  fixedNumbers={fixedNumbers}
+                  onFixedNumbersChange={setFixedNumbers}
+                />
+              )}
+
+              <TeimosinhaConfig
+                enabled={teimosinhaEnabled}
+                repeatCount={teimosinhaRepeat}
+                onEnabledChange={setTeimosinhaEnabled}
+                onRepeatCountChange={setTeimosinhaRepeat}
+              />
+
               <DialogClose asChild>
                 <Button className="w-full" onClick={handleCreate}>
                   Criar Estratégia
@@ -233,7 +258,7 @@ export default function StrategiesPage() {
                         />
                         <span className="text-sm">{config?.name}</span>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <Hash className="h-3 w-3" />
                           {strategy.quantity} jogo{strategy.quantity > 1 ? "s" : ""}
@@ -249,6 +274,14 @@ export default function StrategiesPage() {
                           </span>
                         )}
                       </div>
+                      {(strategy.fixedNumbers && strategy.fixedNumbers.length > 0) && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <Lock className="h-3 w-3" />
+                            {strategy.fixedNumbers.length} fixos
+                          </Badge>
+                        </div>
+                      )}
                       <div className="flex gap-2 pt-1">
                         <Button
                           size="sm"

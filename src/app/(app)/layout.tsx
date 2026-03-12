@@ -6,13 +6,16 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { QuickPlayFab } from "@/components/layout/quick-play-fab";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useAuthContext } from "@/lib/firebase/providers";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { ROUTES } from "@/constants/routes";
 import type { ReactNode } from "react";
 
 export default function AppLayout({ children }: Readonly<{ children: ReactNode }>) {
   const { user, loading } = useAuthContext();
   const router = useRouter();
+  const { onboardingCompleted, completeOnboarding } = usePreferencesStore();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -44,6 +47,7 @@ export default function AppLayout({ children }: Readonly<{ children: ReactNode }
         </main>
       </div>
       <QuickPlayFab />
+      <OnboardingWizard open={!onboardingCompleted} onComplete={completeOnboarding} />
     </div>
   );
 }

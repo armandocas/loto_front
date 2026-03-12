@@ -13,34 +13,65 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
+  Sector,
 } from "recharts";
+import type { PieSectorShapeProps } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LOTTERIES } from "@/constants/lotteries";
-import { getMockFrequency, MOCK_RESULTS } from "@/mocks/results";
+import { MOCK_RESULTS } from "@/mocks/results";
 import { calculateDelays } from "@/lib/analysis/delay-analysis";
 import { analyzeSequences } from "@/lib/analysis/sequence-analysis";
 import { analyzePairs } from "@/lib/analysis/pair-analysis";
 import { analyzeSums, getDecadeDistribution } from "@/lib/analysis/sum-analysis";
+import { DelayChart } from "@/components/statistics/DelayChart";
+import { PairHeatmap } from "@/components/statistics/PairHeatmap";
+import { TrendChart } from "@/components/statistics/TrendChart";
 import type { LotterySlug } from "@/types/lottery";
 
 const PIE_COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+
+const PieSectorShape = (props: PieSectorShapeProps) => (
+  <Sector {...props} fill={PIE_COLORS[(props.index ?? 0) % PIE_COLORS.length]} />
+);
 
 interface Props {
   params: Promise<{ lottery: string }>;
 }
 
-export default function StatisticsPage({ params }: Props) {
+export default function StatisticsPage({ params }: Readonly<Props>) {
   const { lottery: slug } = use(params);
   const config = LOTTERIES[slug as LotterySlug];
   const [tab, setTab] = useState("frequency");
+  const [period, setPeriod] = useState<"all" | "30" | "100" | "500">("all");
+  const [trendNumbers, setTrendNumbers] = useState<number[]>([]);
 
   if (!config) notFound();
 
-  const frequencyMap = getMockFrequency(slug as LotterySlug);
-  const results = MOCK_RESULTS[slug as LotterySlug] || [];
+  const results = useMemo(() => {
+    const allResults = MOCK_RESULTS[slug as LotterySlug] || [];
+    if (period === "all") return allResults;
+    const count = Number(period);
+    return allResults.slice(0, count);
+  }, [slug, period]);
+
+  const frequencyMap = useMemo(() => {
+    const freq: Record<number, number> = {};
+    for (const result of results) {
+      for (const num of result.numbers) {
+        freq[num] = (freq[num] || 0) + 1;
+      }
+    }
+    return freq;
+  }, [results]);
 
   const chartData = useMemo(() => {
     return Object.entries(frequencyMap)
@@ -84,13 +115,13 @@ export default function StatisticsPage({ params }: Props) {
   }, [results]);
 
   const delays = useMemo(
-    () => calculateDelays(results, config.numbers.max).slice(0, 15),
+    () => calculateDelays(results, config.numbers.max),
     [results, config.numbers.max]
   );
 
   const sequences = useMemo(() => analyzeSequences(results), [results]);
 
-  const topPairs = useMemo(() => analyzePairs(results, 15), [results]);
+  const topPairs = useMemo(() => analyzePairs(results, 30), [results]);
 
   const sumStats = useMemo(() => analyzeSums(results), [results]);
 
@@ -99,21 +130,51 @@ export default function StatisticsPage({ params }: Props) {
     [results, config.numbers.max]
   );
 
+  const availableNumbers = useMemo(() => {
+    const nums: number[] = [];
+    for (let i = config.numbers.min; i <= Math.min(config.numbers.max, 80); i++) {
+      nums.push(i);
+    }
+    return nums;
+  }, [config.numbers.min, config.numbers.max]);
+
+  function toggleTrendNumber(num: number) {
+    setTrendNumbers((prev) => {
+      if (prev.includes(num)) return prev.filter((n) => n !== num);
+      if (prev.length >= 5) return prev;
+      return [...prev, num];
+    });
+  }
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold"
-          style={{ backgroundColor: config.color }}
-        >
-          {config.name.slice(0, 2).toUpperCase()}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold"
+            style={{ backgroundColor: config.color }}
+          >
+            {config.name.slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Estatísticas - {config.name}</h1>
+            <p className="text-muted-foreground text-sm">
+              Análise baseada nos últimos {results.length} concursos
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold">Estatísticas - {config.name}</h1>
-          <p className="text-muted-foreground text-sm">
-            Análise baseada nos últimos {results.length} concursos
-          </p>
-        </div>
+
+        <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="30">Últimos 30</SelectItem>
+            <SelectItem value="100">Últimos 100</SelectItem>
+            <SelectItem value="500">Últimos 500</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -144,12 +205,13 @@ export default function StatisticsPage({ params }: Props) {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="frequency">Frequência</TabsTrigger>
           <TabsTrigger value="delay">Atraso</TabsTrigger>
           <TabsTrigger value="pairs">Pares</TabsTrigger>
           <TabsTrigger value="sums">Soma</TabsTrigger>
           <TabsTrigger value="decades">Décadas</TabsTrigger>
+          <TabsTrigger value="trends">Tendência</TabsTrigger>
         </TabsList>
 
         <TabsContent value="frequency" className="space-y-6 mt-6">
@@ -260,32 +322,11 @@ export default function StatisticsPage({ params }: Props) {
               <p className="text-sm text-muted-foreground mb-4">
                 Quantos concursos cada número não é sorteado
               </p>
-              <div className="space-y-3">
-                {delays.map((item) => (
-                  <div key={item.number} className="flex items-center gap-3">
-                    <span
-                      className="w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center shrink-0"
-                      style={{
-                        backgroundColor: `${config.color}20`,
-                        color: config.color,
-                      }}
-                    >
-                      {item.number.toString().padStart(2, "0")}
-                    </span>
-                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-orange-500"
-                        style={{
-                          width: `${(item.delay / (delays[0]?.delay || 1)) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium w-20 text-right">
-                      {item.delay} concurso{item.delay !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <DelayChart
+                data={delays}
+                color={config.color}
+                maxItems={20}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -299,38 +340,11 @@ export default function StatisticsPage({ params }: Props) {
               <p className="text-sm text-muted-foreground mb-4">
                 Números que mais saem juntos no mesmo sorteio
               </p>
-              <div className="space-y-3">
-                {topPairs.map((item) => (
-                  <div key={`${item.pair[0]}-${item.pair[1]}`} className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span
-                        className="w-8 h-8 rounded-full text-[11px] font-bold flex items-center justify-center"
-                        style={{ backgroundColor: config.color, color: "white" }}
-                      >
-                        {item.pair[0].toString().padStart(2, "0")}
-                      </span>
-                      <span
-                        className="w-8 h-8 rounded-full text-[11px] font-bold flex items-center justify-center"
-                        style={{ backgroundColor: config.color, color: "white" }}
-                      >
-                        {item.pair[1].toString().padStart(2, "0")}
-                      </span>
-                    </div>
-                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(item.count / (topPairs[0]?.count || 1)) * 100}%`,
-                          backgroundColor: config.color,
-                        }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium w-16 text-right">
-                      {item.count}x ({item.percentage.toFixed(0)}%)
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <PairHeatmap
+                data={topPairs}
+                color={config.color}
+                maxDisplay={30}
+              />
             </CardContent>
           </Card>
 
@@ -467,11 +481,8 @@ export default function StatisticsPage({ params }: Props) {
                           cy="50%"
                           outerRadius={80}
                           label={({ name }) => name}
-                        >
-                          {decadeData.map((_, i) => (
-                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
+                          shape={PieSectorShape}
+                        />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
@@ -486,6 +497,68 @@ export default function StatisticsPage({ params }: Props) {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="trends" className="mt-6 space-y-6">
+          <Card className="glass border-white/10">
+            <CardHeader>
+              <CardTitle>Tendência de Frequência</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Acompanhe a frequência dos números ao longo dos concursos
+              </p>
+              <TrendChart
+                results={results}
+                selectedNumbers={trendNumbers}
+                color={config.color}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="glass border-white/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Selecione os Números
+                <Badge variant="outline" className="text-xs font-normal">
+                  {trendNumbers.length}/5
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Clique para selecionar até 5 números para acompanhar
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {availableNumbers.map((num) => {
+                  const isSelected = trendNumbers.includes(num);
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => toggleTrendNumber(num)}
+                      className="w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-all"
+                      style={{
+                        backgroundColor: isSelected ? config.color : "transparent",
+                        color: isSelected ? "white" : "hsl(var(--muted-foreground))",
+                        border: isSelected
+                          ? `2px solid ${config.color}`
+                          : "2px solid hsl(var(--border))",
+                        opacity: !isSelected && trendNumbers.length >= 5 ? 0.4 : 1,
+                        cursor:
+                          !isSelected && trendNumbers.length >= 5
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                      disabled={!isSelected && trendNumbers.length >= 5}
+                    >
+                      {num.toString().padStart(2, "0")}
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

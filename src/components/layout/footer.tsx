@@ -10,7 +10,6 @@ const footerLinks = {
   ],
   suporte: [
     { href: "/faq", label: "FAQ" },
-    { href: "/contato", label: "Contato" },
     { href: "/termos", label: "Termos de Uso" },
   ],
   legal: [

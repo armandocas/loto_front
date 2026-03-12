@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Shield, Moon, Sun, Edit2, Check, ShieldCheck } from "lucide-react";
+import { User, Mail, Shield, Moon, Sun, Edit2, Check, ShieldCheck, Camera, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { updateProfile } from "firebase/auth";
-import { getAuth } from "firebase/auth";
+import { updateProfile, getAuth } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -17,6 +17,10 @@ import { useAuthContext } from "@/lib/firebase/providers";
 import { signOut } from "@/lib/firebase/auth";
 import { ROUTES } from "@/constants/routes";
 import Link from "next/link";
+import Image from "next/image";
+
+const MAX_PHOTO_SIZE = 2 * 1024 * 1024;
+const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export default function ProfilePage() {
   const { user } = useAuthContext();
@@ -24,6 +28,9 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSave() {
     const firebaseUser = getAuth().currentUser;
@@ -37,6 +44,39 @@ export default function ProfilePage() {
       toast.error("Erro ao atualizar perfil.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ACCEPTED_TYPES.has(file.type)) {
+      toast.error("Formato inválido. Use JPG, PNG ou WebP.");
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      toast.error("A imagem deve ter no máximo 2MB.");
+      return;
+    }
+
+    const firebaseUser = getAuth().currentUser;
+    if (!firebaseUser) return;
+
+    setUploadingPhoto(true);
+    try {
+      const storage = getStorage();
+      const storageRef = ref(storage, `avatars/${firebaseUser.uid}`);
+      await uploadBytes(storageRef, file, { contentType: file.type });
+      const url = await getDownloadURL(storageRef);
+      await updateProfile(firebaseUser, { photoURL: url });
+      setPhotoURL(url);
+      toast.success("Foto atualizada!");
+    } catch {
+      toast.error("Erro ao enviar foto. Verifique as regras do Storage.");
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -74,8 +114,39 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
-                {(editing ? displayName : user?.displayName)?.[0]?.toUpperCase() || "U"}
+              <div className="relative group">
+                {photoURL ? (
+                  <Image
+                    src={photoURL}
+                    alt="Avatar"
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
+                    {(editing ? displayName : user?.displayName)?.[0]?.toUpperCase() || "U"}
+                  </div>
+                )}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  aria-label="Alterar foto"
+                >
+                  {uploadingPhoto ? (
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
               </div>
               <div className="flex-1">
                 {editing ? (

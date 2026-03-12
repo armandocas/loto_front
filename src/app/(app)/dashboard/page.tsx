@@ -7,8 +7,8 @@ import {
   Dices,
   Bookmark,
   Trophy,
-  ArrowRight,
   CalendarDays,
+  Star,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { LOTTERIES, GENERATION_METHODS } from "@/constants/lotteries";
 import { ROUTES } from "@/constants/routes";
 import { useGameStore } from "@/stores/game.store";
 import { useAuthContext } from "@/lib/firebase/providers";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { getUpcomingDraws } from "@/lib/utils/draw-schedule";
 
 const stats = [
@@ -59,8 +60,14 @@ const itemVariants = {
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { generatedGames, savedGames } = useGameStore();
-  const lotteries = Object.values(LOTTERIES);
+  const { favoriteLotteries, toggleFavoriteLottery } = usePreferencesStore();
   const upcomingDraws = getUpcomingDraws(3).slice(0, 8);
+
+  const allLotteries = Object.values(LOTTERIES);
+  const lotteries = [
+    ...allLotteries.filter((l) => favoriteLotteries.includes(l.slug)),
+    ...allLotteries.filter((l) => !favoriteLotteries.includes(l.slug)),
+  ];
 
   return (
     <div className="space-y-8">
@@ -171,36 +178,55 @@ export default function DashboardPage() {
           animate="visible"
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
         >
-          {lotteries.map((lottery) => (
-            <motion.div key={lottery.slug} variants={itemVariants}>
-              <Link href={ROUTES.lottery(lottery.slug)}>
-                <Card className="group glass border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer h-full">
+          {lotteries.map((lottery) => {
+            const isFav = favoriteLotteries.includes(lottery.slug);
+            return (
+              <motion.div key={lottery.slug} variants={itemVariants}>
+                <Card className={`group glass border-white/10 hover:border-white/20 transition-all duration-300 h-full ${isFav ? "ring-1 ring-yellow-500/30" : ""}`}>
                   <CardContent className="p-5 space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: lottery.color }}
+                    <div className="flex items-start justify-between">
+                      <Link href={ROUTES.lottery(lottery.slug)} className="flex items-center gap-2">
+                        <div
+                          className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: lottery.color }}
+                        >
+                          {lottery.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleFavoriteLottery(lottery.slug);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                        aria-label={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                       >
-                        {lottery.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Star
+                          className={`h-4 w-4 transition-colors ${isFav ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
+                        />
+                      </button>
                     </div>
-                    <div>
+                    <Link href={ROUTES.lottery(lottery.slug)} className="block">
                       <h3 className="font-semibold text-sm">{lottery.name}</h3>
                       <p className="text-xs text-muted-foreground mt-1">
                         {lottery.description}
                       </p>
-                    </div>
+                    </Link>
                     <div className="flex gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-[10px]">
                         {lottery.drawDays.join(", ")}
                       </Badge>
+                      {isFav && (
+                        <Badge className="text-[10px] bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                          Favorita
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
 
