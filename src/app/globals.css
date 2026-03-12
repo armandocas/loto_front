@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 @theme inline {
   --color-background: var(--background);
@@ -128,12 +129,32 @@
   --neon-green: oklch(0.75 0.2 145);
 }
 
+/* Tema claro = quando NÃO está em dark (mais robusto que depender de .light) */
+.light,
+:root:not(.dark) {
+  --background: oklch(0.97 0.01 270);
+  --card: oklch(1 0 0 / 0.4);
+  --popover: oklch(1 0 0 / 0.5);
+  --sidebar: oklch(1 0 0 / 0.35);
+  --sidebar-border: oklch(1 0 0 / 0.2);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .light body,
+  :root:not(.dark) body {
+    background-image: linear-gradient(
+      135deg,
+      #f0f4ff 0%,
+      #e8ecff 50%,
+      #f5f0ff 100%
+    );
+    background-attachment: fixed;
   }
 }
 
@@ -143,6 +164,14 @@
   }
   .glass-strong {
     @apply bg-white/10 backdrop-blur-2xl border border-white/20;
+  }
+  .light .glass,
+  :root:not(.dark) .glass {
+    @apply bg-white/40 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5;
+  }
+  .light .glass-strong,
+  :root:not(.dark) .glass-strong {
+    @apply bg-white/60 backdrop-blur-2xl border border-white/70 shadow-xl shadow-black/10;
   }
   .neon-glow {
     box-shadow:
@@ -176,4 +205,44 @@
       linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px);
     background-size: 60px 60px;
   }
+  .light .bg-grid,
+  :root:not(.dark) .bg-grid {
+    background-image: linear-gradient(
+        oklch(0.4 0.02 270 / 0.06) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, oklch(0.4 0.02 270 / 0.06) 1px, transparent 1px);
+  }
+}
+
+/* Glassmorphism para Sheet e Popover no tema claro */
+.light [data-slot="sheet-content"],
+:root:not(.dark) [data-slot="sheet-content"] {
+  background-color: oklch(1 0 0 / 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-color: oklch(1 0 0 / 0.2);
+}
+
+.light [data-slot="popover-content"],
+:root:not(.dark) [data-slot="popover-content"] {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Topbar e Sidebar: glassmorphism no tema claro (via CSS, não depende de JS) */
+.light .app-topbar,
+:root:not(.dark) .app-topbar {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.light .app-sidebar,
+:root:not(.dark) .app-sidebar {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }

@@ -8,7 +8,6 @@ import {
   PauseCircle,
   AlertTriangle,
   Gamepad2,
-  BarChart3,
   Bell,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,16 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { useResponsibleStore } from "@/stores/responsible.store";
 
 export default function ResponsiblePage() {
@@ -90,10 +79,12 @@ export default function ResponsiblePage() {
         className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20"
       >
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-amber-300">Lembre-se</p>
-            <p className="text-xs text-amber-200/80 mt-1">
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
+              Lembre-se
+            </p>
+            <p className="text-xs text-amber-800/90 dark:text-amber-200/80 mt-1">
               Loterias são jogos de azar. Jogue com responsabilidade e nunca
               comprometa mais do que pode perder. O LotoSmart é uma ferramenta
               de auxílio, não uma garantia de ganho.

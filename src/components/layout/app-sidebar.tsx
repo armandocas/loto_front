@@ -40,7 +40,7 @@ export function AppSidebar() {
   const lotteries = Object.values(LOTTERIES);
 
   return (
-    <aside className="hidden lg:flex w-64 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0">
+    <aside className="app-sidebar hidden lg:flex w-64 flex-col border-r border-sidebar-border bg-sidebar h-screen sticky top-0">
       <div className="p-4 flex items-center gap-2">
         <Sparkles className="h-6 w-6 text-neon-blue" />
         <span className="text-lg font-bold text-gradient">LotoSmart</span>
